@@ -1,51 +1,97 @@
 import { Dispatch, FC, SetStateAction, useState } from 'react'
-import { iInvestments } from '.';
+import { iCoinDefault, iInvestments } from '.';
 
 interface iUserInversionProps {
   setInvestments: Dispatch<SetStateAction<iInvestments>>,
-  investments: iInvestments
+  investments: iInvestments,
+  coinList: iCoinDefault[]
+}
+interface iInput {
+  value: string | number
+  error: boolean;
+  message: string;
 }
 
-export const UserInversion: FC<iUserInversionProps> = ({ setInvestments, investments }) => {
-  const coinList = ["bitcoin", "ether", "cardano"];
-  const [selectedCoin, setSelectedCoin] = useState<string>("")
-  const [dollarInput, setDollarInput] = useState<number>(0)
-  console.log("refresh?", investments)
+export const UserInversion: FC<iUserInversionProps> = ({ setInvestments, investments, coinList }) => {
+    const [selectedCoin, setSelectedCoin] = useState<iInput>({
+    value: "",
+    error: false,
+    message: "pls select a coin"
+  })
+  const [dollarInput, setDollarInput] = useState<iInput>({
+    value: "",
+    error: false,
+    message: "pls enter a valid amount"
+  })
+
   const selectCoin = (e: any) => {
     const target = e.currentTarget;
-    setSelectedCoin(target.value)
+
+    setSelectedCoin({ ...selectedCoin, ...{ value: target.value, error: false } })
   };
-  const handleChange = (e: any) => setDollarInput(Number(e.target.value))
+
+  const handleChange = (e: any) => {
+    const number = Number(e.target.value);
+    const value = number >= 0 ? number : "";
+    setDollarInput({ ...dollarInput, ...{ value, error: false } })
+  }
 
   const addInvestment = () => {
-    const investment: iInvestments = { [selectedCoin]: dollarInput }
+    if (!dollarInput || !selectedCoin.value) {
+      validationInvestment()
+      return;
+    }
+    const investment: iInvestments = { [selectedCoin.value]: Number(dollarInput.value) }
     setInvestments({ ...investments, ...investment })
   }
 
-  const Options = () => coinList.map((colorKey) => (
-    <option value={colorKey} key={colorKey}>
-      {colorKey}
+  const validationInvestment = () => {
+    if (!selectedCoin.value) {
+      setSelectedCoin({ ...selectedCoin, ...{ error: true } })
+    }
+    if (!dollarInput.value) {
+      setDollarInput({ ...dollarInput, ...{ error: true } })
+    }
+  }
+
+  const Options = () => coinList.map(({coin}) => (
+    <option value={coin} key={coin}>
+      {coin}
     </option>
   ))
+
   return <>
-    <div className="CoinContainer">
-      <select
-        name="selectedCoin"
-        value={selectedCoin ? selectedCoin : ""}
-        onChange={selectCoin}
-        required
-      >
-        <option value="" disabled>
-          Select a coint...
-        </option>
-        {Options()}
-      </select>
-      <input
-        id="dollar"
-        type="number"
-        placeholder="Dollars"
-        value={dollarInput}
-        onChange={handleChange} />
+    <div className="coinContainer">
+      <div className="SelectCoin">
+        <select
+          name="selectedCoin"
+          value={selectedCoin.value ? selectedCoin.value : ""}
+          onChange={selectCoin}
+          required
+        >
+          <option value="" disabled>
+            Select a coint...
+          </option>
+          {Options()}
+        </select>
+        {
+          selectedCoin.error &&
+          <label style={{ color: "red" }}>{selectedCoin.message}</label>
+        }
+      </div>
+      <div className="dollarContainer">
+        <input
+          id="dollar"
+          type="number"
+          placeholder="Dollars"
+          value={dollarInput.value}
+          onChange={handleChange} />
+        {
+          dollarInput.error &&
+          <label style={{ color: "red" }}>{dollarInput.message}</label>
+        }
+      </div>
+
       <input
         id="add"
         type="button"
