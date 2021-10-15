@@ -1,101 +1,167 @@
 import { FC, useEffect, useState } from 'react'
-import { iCoinApi, iCoinDefault, iInvestments } from '.'
+import { iCoinApi, iCoinDefault, IinvestmentList } from '.'
 
 interface iGeneralBalanceProps {
-  investments: iInvestments;
+  investmentList: IinvestmentList;
   coinsDatails: iCoinApi[];
   coinList: iCoinDefault[]
 }
-interface iMetrics {
+
+interface iMetricsByMonth {
   [key: string]: {
-    investment: number;
+    amount: number;
     totalCripto: number;
     costDollar: number;
     perMonth: number;
   }
 }
+
 export const GeneralBalance: FC<iGeneralBalanceProps> = (
-  { investments, coinsDatails, coinList }) => {
-  const [metrics, setMetrics] = useState<iMetrics>({})
-  console.log('metrics', metrics)
+  { investmentList, coinsDatails, coinList }) => {
+  const months = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+  const [metricsByMonth, setMetricsByMonth] = useState<{ [key: string]: iMetricsByMonth }>({})
+  console.log('investmentList', investmentList)
 
   useEffect(() => {
     setMetricsFc()
   }, [])
 
   useEffect(() => {
-    let newMetric: iMetrics = {}
-    for (const coinName in investments) {
-      const coinDetail = coinsDatails.find(({ slug }) => slug === coinName)
-      const perMonth = coinList.find(({ coin: coinMap }) => coinName === coinMap)
-      newMetric = {
-        ...newMetric,
-        ...{
-          [coinName]: {
-            investment: investments[coinName],
-            costDollar: coinDetail ? coinDetail.metrics.market_data.price_usd : 0,
-            perMonth: perMonth ? perMonth.roiMonth : 0,
-            totalCripto: 0,
-          }
-          // [coinName]: {
-          //  "2020-11-01": [
-          //    {
-          //      investment: investments[coinName],
-          //      costDollar: coinDetail ? coinDetail.metrics.market_data.price_usd : 0,
-          //    perMonth: perMonth ? perMonth.roiMonth : 0,
-          //    totalCripto: 0,
-          //    },
-          //    ...
-          //    {}
-          //  ],...
-          // "anotherDate": [{},...]
-          // }
-        }
-      }
-    }
-    setMetrics(newMetric)
-  }, [investments, coinsDatails])
+    let newMetric: iMetricsByMonth = {}
+    getMetricsByMonth();
+    // for (const coinName in investmentList) {
+    //   const coinDetail = coinsDatails.find(({ slug }) => slug === coinName)
+    //   const perMonth = coinList.find(({ coin: coinMap }) => coinName === coinMap)
+    //   newMetric = {
+    //     ...newMetric,
+    //     ...{
+    //       [coinName]: {
+    //         investment: investmentList[coinName],
+    //         costDollar: coinDetail ? coinDetail.metrics.market_data.price_usd : 0,
+    //         perMonth: perMonth ? perMonth.roiMonth : 0,
+    //         totalCripto: 0,
+    //       }
+    //       // [coinName]: {
+    //       //  "2020-11-01": [
+    //       //    {
+    //       //      investment: investmentList[coinName],
+    //       //      costDollar: coinDetail ? coinDetail.metrics.market_data.price_usd : 0,
+    //       //    perMonth: perMonth ? perMonth.roiMonth : 0,
+    //       //    totalCripto: 0,
+    //       //    },
+    //       //    ...
+    //       //    {}
+    //       //  ],...
+    //       // "anotherDate": [{},...]
+    //       // }
+    //     }
+    //   }
+    // }
+    // setMetricsByMonth(newMetric)
+  }, [investmentList, coinsDatails])
 
-  const setMetricsFc = () => {
-    const newMetrics: iMetrics = coinList.reduce((a, { coin }) => {
-      a = {
-        ...a,
-        ...{
-          [coin]: {
-            costDollar: 0,
-            totalCripto: 0,
-            perMonth: 0,
-            investment: 0
+  const getMetricsByMonth = () => {
+    let metric: iMetricsByMonth = {};
+    for (const { coin } of coinList) {
+      const dateList = investmentList[coin]
+      if (!dateList) return
+
+      const dateKeys = Object.keys(dateList)
+      dateKeys.map(date => {                                           // key to MONTH
+        const metricTmp = dateList[date].reduce((a: { [key: string]: iMetricsByMonth }, inv) => {
+          const month = new Date(date).getMonth() + 1
+          const coinDetail = coinsDatails.find(({ slug }) => slug === coin)
+          const perMonth = coinList.find(({ coin: coinMap }) => coin === coinMap)
+
+          const price_usd = coinDetail ? coinDetail.metrics.market_data.price_usd : 0
+          const roiMonth = perMonth ? perMonth.roiMonth : 0
+          if (!a.hasOwnProperty(month)) {
+            a = {
+              [month]: {
+                [coin]: {
+                  amount: inv.amount,
+                  costDollar: price_usd,
+                  perMonth: roiMonth,
+                  totalCripto: (price_usd * inv.amount) * roiMonth
+                }
+              }
+            }
+          } else {
+            a = {
+              ...a,
+              ...{
+                [month]: {
+                  [coin]: {
+                    amount: a[month][coin].amount + inv.amount,
+                    costDollar: price_usd,
+                    perMonth: roiMonth,
+                    totalCripto: (price_usd * inv.amount) * roiMonth
+                  }
+                }
+              }
+            }
           }
-        }
-      }
-      return a
-    }, {})
-    setMetrics(newMetrics)
+
+          return a
+        }, {})
+        setMetricsByMonth({ ...metricsByMonth, ...metricTmp })
+      })
+    }
+
   }
 
+  const setMetricsFc = () => {
+    // const newMetrics: { [key: string]: iMetricsByMonth } = coinList.reduce((a, { coin }) => {
+    //   a = {
+    //     ...a,
+    //     ...{
+    //       [(new Date()).toLocaleDateString()]: {
+    //         [coin]: {
+    //           costDollar: 0,
+    //           totalCripto: 0,
+    //           perMonth: 0,
+    //           investment: 0
+    //         }
+    //       }
+    //     }
+    //   }
+    //   return a
+    // }, {})
+    // setMetricsByMonth(newMetrics)
+  }
+
+  const BalanceTd = (nameCoin: string) => {
+    // months.map((month, i) => {
+    //   console.log('i', i)
+    //   // metricsByMonth[i + 1]
+    //   console.log('metricsByMonth[i + 1]', metricsByMonth[i + 1])
+    //   console.log('metricsByMonth', metricsByMonth)
+    //   return <td>
+
+    //   </td>
+    // })
+    return <th key={nameCoin}>X</th>
+  }
   return <>
     <div className="GeneralBalance">
-      {investments &&
+      {investmentList &&
         <table>
           <thead>
             <tr>
-              <th>Coin</th>
-              <th>Investment</th></tr>
+              {
+                months.map((month, i) => <th key={month}>{month}</th>
+                )
+              }
+            </tr>
           </thead>
           <tbody>
             {
-              //{
-              // bitcoin: 123,
-              // etherium: 555
-              //}
-              Object.keys(investments).map(coinKey =>
-                <tr key={coinKey}>
-                  <th>{coinKey}</th>
-                  <th>{investments[coinKey]}</th>
-                </tr>
-              )
+              coinList.map(({ coin }) => <tr key={coin}>
+                <td><strong>{coin}</strong></td>
+                {BalanceTd(coin)}
+              </tr>)
             }
+
           </tbody>
         </table>}
     </div>

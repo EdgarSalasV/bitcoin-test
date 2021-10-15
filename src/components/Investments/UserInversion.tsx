@@ -1,9 +1,9 @@
 import { Dispatch, FC, SetStateAction, useState } from 'react'
-import { iCoinDefault, iInvestments } from '.';
+import { iCoinDefault, iInvestment, IinvestmentList } from '.';
 
 interface iUserInversionProps {
-  setInvestments: Dispatch<SetStateAction<iInvestments>>,
-  investments: iInvestments,
+  setInvestmentList: Dispatch<SetStateAction<IinvestmentList>>,
+  investmentList: IinvestmentList,
   coinList: iCoinDefault[]
 }
 interface iInput {
@@ -12,8 +12,8 @@ interface iInput {
   message: string;
 }
 
-export const UserInversion: FC<iUserInversionProps> = ({ setInvestments, investments, coinList }) => {
-    const [selectedCoin, setSelectedCoin] = useState<iInput>({
+export const UserInversion: FC<iUserInversionProps> = ({ setInvestmentList, investmentList, coinList }) => {
+  const [selectedCoin, setSelectedCoin] = useState<iInput>({
     value: "",
     error: false,
     message: "pls select a coin"
@@ -37,12 +37,26 @@ export const UserInversion: FC<iUserInversionProps> = ({ setInvestments, investm
   }
 
   const addInvestment = () => {
-    if (!dollarInput || !selectedCoin.value) {
+    if (!dollarInput.value || !selectedCoin.value) {
       validationInvestment()
       return;
     }
-    const investment: iInvestments = { [selectedCoin.value]: Number(dollarInput.value) }
-    setInvestments({ ...investments, ...investment })
+    const today = (new Date()).toLocaleDateString()
+    const tmp = investmentList[selectedCoin.value]
+    const tmptmp = tmp ? tmp[today] : []
+    const investmentListTmp: iInvestment[] = [
+      ...tmptmp,
+      {
+        amount: Number(dollarInput.value), timestamp: (new Date()).toTimeString()
+      }
+    ]
+
+    const investmentsTmp: IinvestmentList = {
+      [selectedCoin.value]: {
+        [today]: investmentListTmp
+      }
+    }
+    setInvestmentList({ ...investmentList, ...investmentsTmp })
   }
 
   const validationInvestment = () => {
@@ -54,7 +68,7 @@ export const UserInversion: FC<iUserInversionProps> = ({ setInvestments, investm
     }
   }
 
-  const Options = () => coinList.map(({coin}) => (
+  const Options = () => coinList.map(({ coin }) => (
     <option value={coin} key={coin}>
       {coin}
     </option>
