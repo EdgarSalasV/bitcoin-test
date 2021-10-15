@@ -33,8 +33,8 @@ export interface iCoinDefault {
 export const Investments: FC<{}> = ({ }) => {
   const coinList: iCoinDefault[] = [
     { coin: "bitcoin", roiMonth: 1.05 },
-    { coin: "ethereum", roiMonth: 1.05 },
-    { coin: "cardano", roiMonth: 1.05 }
+    { coin: "ethereum", roiMonth: 1.042 },
+    { coin: "cardano", roiMonth: 1.01 }
   ];
   const [investmentList, setInvestmentList] = useState<IinvestmentList>({});
   const [coinsDatails, setCoinsDatails] = useState<iCoinApi[]>([]);
