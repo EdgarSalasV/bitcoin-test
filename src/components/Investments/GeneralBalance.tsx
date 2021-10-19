@@ -1,3 +1,4 @@
+import { totalmem } from 'os'
 import React from 'react'
 import { FC, useEffect, useState } from 'react'
 import { iCoinApi, iCoinDefault, IinvestmentList } from '.'
@@ -19,7 +20,7 @@ interface iMetricsByMonth {
 
 export const GeneralBalance: FC<iGeneralBalanceProps> = (
   { investmentList, coinsDatails, coinList }) => {
-  const months = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+  const months = ["",  "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
   const [metricsByMonth, setMetricsByMonth] = useState<{ [key: string]: iMetricsByMonth }>({})
 
   useEffect(() => {
@@ -33,6 +34,7 @@ export const GeneralBalance: FC<iGeneralBalanceProps> = (
       const dateKeys = Object.keys(dateList)
       dateKeys.map(date => {                                           // key to MONTH
         const month = new Date(date).getMonth() + 1
+        console.log("month",month)
         const metricTmp = dateList[date].reduce((a: { [key: string]: iMetricsByMonth }, inv) => {
           const coinDetail = coinsDatails.find(({ slug }) => slug === coin)
           const perMonth = coinList.find(({ coin: coinMap }) => coin === coinMap)
@@ -67,7 +69,7 @@ export const GeneralBalance: FC<iGeneralBalanceProps> = (
         metricFinal = { [month]: { ...metricFinal[month], ...metricTmp[month] } }
       })
     }
-    console.log('metricFinal', metricFinal)
+    //console.log('metricFinal', metricFinal)
     setMetricsByMonth({ ...metricsByMonth, ...metricFinal })
   }
 
@@ -77,13 +79,17 @@ export const GeneralBalance: FC<iGeneralBalanceProps> = (
       const hasMonth = metricsByMonth[i - 1]
       const hastCoin = hasMonth ? hasMonth[nameCoin] : null
       const totalCripto = hastCoin ? hastCoin.totalCripto : 0
-
+      
       elementC.push(<td key={i}>
         {totalCripto}
       </td>)
-    }
+    //console.log("totalCripto",totalCripto)
+    //console.log("hasMonth",hasMonth)
+  }
     return elementC
   }
+
+
 
   return <>
     <div className="GeneralBalance">
@@ -99,7 +105,7 @@ export const GeneralBalance: FC<iGeneralBalanceProps> = (
           </thead>
           <tbody>
             {
-              coinList.map(({ coin }) => <tr key={coin}>
+                coinList.map(({ coin }) => <tr key={coin}>
                 <td><strong>{coin}</strong></td>
                 {BalanceTd(coin)}
               </tr>)

@@ -24,17 +24,46 @@ export const UserInversion: FC<iUserInversionProps> = ({ setInvestmentList, inve
     message: "pls enter a valid amount"
   })
 
+  const [dateInput, setDateInput] = useState<iInput>({
+    value: dateFormat(),
+    error: false,
+    message: "pls enter a valid date"
+  })
+
   const selectCoin = (e: any) => {
     const target = e.currentTarget;
-
     setSelectedCoin({ ...selectedCoin, ...{ value: target.value, error: false } })
+
   };
+
+
 
   const handleChange = (e: any) => {
     const number = Number(e.target.value);
     const value = number >= 0 ? number : "";
     setDollarInput({ ...dollarInput, ...{ value, error: false } })
   }
+  
+  const handleDate = (e:any) => {
+    console.log("event from Date",e.target.value)
+    setDateInput({...dateInput, ...{error: false, value: e.target.value}})
+    
+  }
+
+  console.log("dateInput",dateInput)
+  
+  function dateFormat(){
+  
+    let today = new Date();
+    let dd = String(today.getDate()).padStart(2, '0');
+    let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+    let yyyy = today.getFullYear();
+
+    return yyyy + '-' + mm + '-' + dd;
+
+  }
+
+
 
   const addInvestment = () => {
     if (!dollarInput.value || !selectedCoin.value) {
@@ -42,10 +71,13 @@ export const UserInversion: FC<iUserInversionProps> = ({ setInvestmentList, inve
       return;
     }
     const today = (new Date()).toLocaleDateString()
-    const tmp = investmentList[selectedCoin.value]
-    const tmptmp = tmp ? tmp[today] : []
+    console.log("today: ",today)
+    const hasDataDate = investmentList[selectedCoin.value]
+    console.log("hasDataDate",hasDataDate)// {"todayDate": {amount: , timestamp: "Hr:Mnt:Sc Timezone} }
+    const dataDate = hasDataDate ? hasDataDate[today] : []
+    console.log("dataDate[today]",dataDate) // has dataDate[{amount: n tiempstamp:  "Hr:Mnt:Sc Timezone}]
     const investmentListTmp: iInvestment[] = [
-      ...tmptmp,
+      ...dataDate,
       {
         amount: Number(dollarInput.value), timestamp: (new Date()).toTimeString()
       }
@@ -57,6 +89,8 @@ export const UserInversion: FC<iUserInversionProps> = ({ setInvestmentList, inve
       }
     }
     setInvestmentList({ ...investmentList, ...investmentsTmp })
+    console.log("investmentsTmp:",investmentsTmp)
+    console.log("investTmp",investmentListTmp)
   }
 
   const validationInvestment = () => {
@@ -100,6 +134,13 @@ export const UserInversion: FC<iUserInversionProps> = ({ setInvestmentList, inve
           placeholder="Dollars"
           value={dollarInput.value}
           onChange={handleChange} />
+
+        <input
+          id="date"
+          type="date"
+          placeholder="DD/MM/YYYY"
+          value={dateInput.value}
+          onChange={handleDate} />
         {
           dollarInput.error &&
           <label style={{ color: "red" }}>{dollarInput.message}</label>
