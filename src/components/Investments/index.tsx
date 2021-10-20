@@ -38,19 +38,31 @@ export const Investments: FC<{}> = ({ }) => {
   ];
   const [investmentList, setInvestmentList] = useState<IinvestmentList>({});
   const [coinsDatails, setCoinsDatails] = useState<iCoinApi[]>([]);
-  
+  const [inputDate, setInputDate] = useState<string>("");
+
   useEffect(() => {
     getCoinsDetailsApi();
   }, [])
 
+  const handleComunicationInputs = (date: string) => setInputDate(date)
   const getCoinsDetailsApi = () => {
     const filterCoins = dataCoin.data.filter(({ slug }) => coinList.some(({ coin }) => coin === slug))
     setCoinsDatails(filterCoins);
   }
   return <>
     <div className="Investments">
-      <UserInversion setInvestmentList={setInvestmentList} investmentList={investmentList} coinList={coinList} />
-      <GeneralBalance coinList={coinList} investmentList={investmentList} coinsDatails={coinsDatails} />
+      <UserInversion
+        setInvestmentList={setInvestmentList} //CB indirecto 
+        setDateUserInversion={handleComunicationInputs} //CB indirecto 
+        // setInvestmentList={(e) => { console.log(e); setInvestmentList(e) }} //CB directo 
+        investmentList={investmentList}
+        coinList={coinList} />
+
+      <GeneralBalance
+        coinList={coinList}
+        investmentList={investmentList}
+        coinsDatails={coinsDatails}
+        inputDate={inputDate} />
     </div>
   </>
 }

@@ -2,8 +2,9 @@ import { Dispatch, FC, SetStateAction, useState } from 'react'
 import { iCoinDefault, iInvestment, IinvestmentList } from '.';
 
 interface iUserInversionProps {
-  setInvestmentList: Dispatch<SetStateAction<IinvestmentList>>,
-  investmentList: IinvestmentList,
+  setInvestmentList: Dispatch<SetStateAction<IinvestmentList>>;
+  setDateUserInversion: (data: string) => void;
+  investmentList: IinvestmentList;
   coinList: iCoinDefault[]
 }
 interface iInput {
@@ -12,7 +13,7 @@ interface iInput {
   message: string;
 }
 
-export const UserInversion: FC<iUserInversionProps> = ({ setInvestmentList, investmentList, coinList }) => {
+export const UserInversion: FC<iUserInversionProps> = ({ setInvestmentList, setDateUserInversion, investmentList, coinList }) => {
   const [selectedCoin, setSelectedCoin] = useState<iInput>({
     value: "",
     error: false,
@@ -36,34 +37,27 @@ export const UserInversion: FC<iUserInversionProps> = ({ setInvestmentList, inve
 
   };
 
-
-
   const handleChange = (e: any) => {
     const number = Number(e.target.value);
     const value = number >= 0 ? number : "";
     setDollarInput({ ...dollarInput, ...{ value, error: false } })
   }
-  
-  const handleDate = (e:any) => {
-    console.log("event from Date",e.target.value)
-    setDateInput({...dateInput, ...{error: false, value: e.target.value}})
-    
+
+  const handleDate = (e: any) => {
+    console.log("event from Date", e.target.value)
+    setDateInput({ ...dateInput, ...{ error: false, value: e.target.value } })
+
   }
 
-  console.log("dateInput",dateInput)
-  
-  function dateFormat(){
-  
+  console.log("dateInput", dateInput)
+
+  function dateFormat() {
     let today = new Date();
     let dd = String(today.getDate()).padStart(2, '0');
     let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
     let yyyy = today.getFullYear();
-
     return yyyy + '-' + mm + '-' + dd;
-
   }
-
-
 
   const addInvestment = () => {
     if (!dollarInput.value || !selectedCoin.value) {
@@ -71,11 +65,11 @@ export const UserInversion: FC<iUserInversionProps> = ({ setInvestmentList, inve
       return;
     }
     const today = (new Date()).toLocaleDateString()
-    console.log("today: ",today)
+    console.log("today: ", today)
     const hasDataDate = investmentList[selectedCoin.value]
-    console.log("hasDataDate",hasDataDate)// {"todayDate": {amount: , timestamp: "Hr:Mnt:Sc Timezone} }
+    console.log("hasDataDate", hasDataDate)// {"todayDate": {amount: , timestamp: "Hr:Mnt:Sc Timezone} }
     const dataDate = hasDataDate ? hasDataDate[today] : []
-    console.log("dataDate[today]",dataDate) // has dataDate[{amount: n tiempstamp:  "Hr:Mnt:Sc Timezone}]
+    console.log("dataDate[today]", dataDate) // has dataDate[{amount: n tiempstamp:  "Hr:Mnt:Sc Timezone}]
     const investmentListTmp: iInvestment[] = [
       ...dataDate,
       {
@@ -89,8 +83,9 @@ export const UserInversion: FC<iUserInversionProps> = ({ setInvestmentList, inve
       }
     }
     setInvestmentList({ ...investmentList, ...investmentsTmp })
-    console.log("investmentsTmp:",investmentsTmp)
-    console.log("investTmp",investmentListTmp)
+    setDateUserInversion(dateInput.value.toLocaleString())
+    console.log("investmentsTmp:", investmentsTmp)
+    console.log("investTmp", investmentListTmp)
   }
 
   const validationInvestment = () => {
